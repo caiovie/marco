@@ -20,7 +20,7 @@ Estética editorial minimalista (preto e branco + cor semântica), inspirada em 
 | Tema | next-themes (claro/escuro), tokens em CSS variables |
 | Animação | Framer Motion (só `opacity`/`transform`, 150–200ms) |
 | Banco/Auth | Supabase |
-| IA | API Anthropic (`claude-fable-5` / `claude-haiku-4-5`) |
+| IA | API OpenAI — modelos via env (`OPENAI_MODEL`, `OPENAI_MODEL_LIGHT`, `OPENAI_EMBEDDING_MODEL`) |
 | Automações | n8n self-hosted |
 | Deploy | Vercel |
 
