@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* Tokens do DESIGN.md — fonte de verdade visual. Nunca hardcodar hex nos componentes. */
+:root {
+  --ink: #0a0a0a;
+  --ink-900: #1c1917;
+  --ink-700: #44403c;
+  --ink-500: #78716c;
+  --ink-400: #a8a29e;
+  --line: #e7e5e4;
+  --surface: #ffffff;
+  --surface-2: #f5f5f4;
+  --paper: #fafaf9;
+
+  --positive: #16a34a;
+  --positive-chip: #dcfce7;
+  --positive-text: #166534;
+  --negative: #dc2626;
+  --negative-chip: #fee2e2;
+  --negative-text: #991b1b;
+  --warn: #d97706;
+  --warn-chip: #fef3c7;
+  --warn-text: #92400e;
+  --info: #2563eb;
+  --info-chip: #dbeafe;
+  --info-text: #1e40af;
+
+  --tag-ae-chip: #ede9fe;
+  --tag-ae-text: #5b21b6;
+  --tag-kairos-chip: #d1fae5;
+  --tag-kairos-text: #065f46;
+  --tag-esca7-chip: #fef3c7;
+  --tag-esca7-text: #92400e;
+  --tag-busca-clt-chip: #fce7f3;
+  --tag-busca-clt-text: #9d174d;
+}
+
+.dark {
+  --ink: #fafaf9;
+  --ink-900: #e7e5e4;
+  --ink-700: #d6d3d1;
+  --ink-500: #a8a29e;
+  --ink-400: #78716c;
+  --line: #1f1f1f;
+  --surface: #121212;
+  --surface-2: #1a1a1a;
+  --paper: #0a0a0a;
+
+  --positive-chip: #052e16;
+  --positive-text: #86efac;
+  --negative-chip: #450a0a;
+  --negative-text: #fca5a5;
+  --warn-chip: #451a03;
+  --warn-text: #fbbf24;
+  --info-chip: #172554;
+  --info-text: #93c5fd;
+
+  --tag-ae-chip: #2e1065;
+  --tag-ae-text: #c4b5fd;
+  --tag-kairos-chip: #064e3b;
+  --tag-kairos-text: #6ee7b7;
+  --tag-esca7-chip: #451a03;
+  --tag-esca7-text: #fcd34d;
+  --tag-busca-clt-chip: #500724;
+  --tag-busca-clt-text: #f9a8d4;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-900: var(--ink-900);
+  --color-ink-700: var(--ink-700);
+  --color-ink-500: var(--ink-500);
+  --color-ink-400: var(--ink-400);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-paper: var(--paper);
+
+  --color-positive: var(--positive);
+  --color-positive-chip: var(--positive-chip);
+  --color-positive-text: var(--positive-text);
+  --color-negative: var(--negative);
+  --color-negative-chip: var(--negative-chip);
+  --color-negative-text: var(--negative-text);
+  --color-warn: var(--warn);
+  --color-warn-chip: var(--warn-chip);
+  --color-warn-text: var(--warn-text);
+  --color-info: var(--info);
+  --color-info-chip: var(--info-chip);
+  --color-info-text: var(--info-text);
+
+  --color-tag-ae-chip: var(--tag-ae-chip);
+  --color-tag-ae-text: var(--tag-ae-text);
+  --color-tag-kairos-chip: var(--tag-kairos-chip);
+  --color-tag-kairos-text: var(--tag-kairos-text);
+  --color-tag-esca7-chip: var(--tag-esca7-chip);
+  --color-tag-esca7-text: var(--tag-esca7-text);
+  --color-tag-busca-clt-chip: var(--tag-busca-clt-chip);
+  --color-tag-busca-clt-text: var(--tag-busca-clt-text);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+html {
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background-color 200ms, color 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
