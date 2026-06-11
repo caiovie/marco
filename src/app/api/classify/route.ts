@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { classifySuggestionSchema } from "@/lib/schemas";
@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 const bodySchema = z.object({ id: z.string().uuid() });
 
 export async function POST(request: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL_LIGHT;
+  if (!apiKey || !model) {
     return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
   }
 
@@ -45,18 +46,18 @@ export async function POST(request: Request) {
     .map((p) => `- ${p.slug} (${p.name})`)
     .join("\n");
 
-  const anthropic = new Anthropic({ apiKey, timeout: 10_000, maxRetries: 1 });
+  const openai = new OpenAI({ apiKey, timeout: 15_000, maxRetries: 1 });
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      tools: [
-        {
+    const completion = await openai.chat.completions.create({
+      model,
+      max_completion_tokens: 2000,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
           name: "classify_item",
-          description:
-            "Classifica um item capturado no inbox de um sistema pessoal de organização.",
-          input_schema: {
+          strict: true,
+          schema: {
             type: "object",
             properties: {
               project_slug: {
@@ -77,11 +78,16 @@ export async function POST(request: Request) {
               },
             },
             required: ["project_slug", "kind", "title"],
+            additionalProperties: false,
           },
         },
-      ],
-      tool_choice: { type: "tool", name: "classify_item" },
+      },
       messages: [
+        {
+          role: "system",
+          content:
+            "Você classifica itens capturados no inbox de um sistema pessoal de organização de atividades.",
+        },
         {
           role: "user",
           content: `Projetos do usuário:\n${projectList}\n\nItem capturado no inbox:\n"""${item.raw_text}"""\n\nClassifique o item.`,
@@ -89,12 +95,12 @@ export async function POST(request: Request) {
       ],
     });
 
-    const toolUse = message.content.find((b) => b.type === "tool_use");
-    if (!toolUse || toolUse.type !== "tool_use") {
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
       return NextResponse.json({ error: "no_classification" }, { status: 502 });
     }
 
-    const suggestion = classifySuggestionSchema.safeParse(toolUse.input);
+    const suggestion = classifySuggestionSchema.safeParse(JSON.parse(content));
     if (!suggestion.success) {
       return NextResponse.json({ error: "invalid_classification" }, { status: 502 });
     }

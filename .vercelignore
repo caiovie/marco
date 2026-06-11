@@ -1,0 +1,3 @@
+# Nunca subir secrets locais no deploy — produção usa as env vars do projeto Vercel
+.env*
+!.env.example

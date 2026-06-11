@@ -15,7 +15,7 @@
 - next-themes (claro/escuro via classe `.dark`)
 - Inter + JetBrains Mono via next/font
 - Supabase (banco/auth — conta nova via MCP)
-- IA: API Anthropic — `claude-fable-5` (síntese), `claude-haiku-4-5-20251001` (classificação em volume)
+- IA: API OpenAI — modelos SEMPRE via env, nunca hardcoded: `OPENAI_MODEL` (síntese/casos ambíguos), `OPENAI_MODEL_LIGHT` (classificação/extração em volume), `OPENAI_EMBEDDING_MODEL` (pgvector, 1536 dims)
 - n8n self-hosted (https://workflowsmatriz.cassinweb.shop) para automações
 - Deploy: Vercel
 

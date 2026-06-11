@@ -8,9 +8,9 @@ node_modules/
 out/
 build/
 
-# Env — nunca versionar secrets
-.env
-.env*.local
+# Env — nunca versionar secrets (qualquer variante)
+.env*
+!.env.example
 
 # Vercel
 .vercel
