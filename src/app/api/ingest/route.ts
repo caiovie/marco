@@ -9,6 +9,8 @@ export const maxDuration = 30;
 const bodySchema = z.object({
   source: z.string().min(1).max(40),
   text: z.string().min(1).max(4000),
+  kind: z.enum(["task", "milestone", "note"]).optional(),
+  project_slug: z.string().max(60).optional(),
 });
 
 // #tag no texto força o projeto (ex.: "#clt revisar contrato")
@@ -73,14 +75,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "projects_failed" }, { status: 502 });
   }
 
-  let suggestion = await classifyText(
-    text,
-    (projects ?? []) as { slug: string; name: string }[]
-  );
-  if (forcedSlug) {
+  const projectList = (projects ?? []) as { slug: string; name: string }[];
+  const validSlugs = projectList.map((p) => p.slug);
+  // Campos explícitos do chamador têm prioridade sobre a #tag e sobre a IA
+  if (!forcedSlug && parsed.data.project_slug && validSlugs.includes(parsed.data.project_slug)) {
+    forcedSlug = parsed.data.project_slug;
+  }
+
+  let suggestion = await classifyText(text, projectList);
+  if (forcedSlug || parsed.data.kind) {
     suggestion = {
-      project_slug: forcedSlug,
-      kind: suggestion?.kind ?? "task",
+      project_slug: forcedSlug ?? suggestion?.project_slug ?? null,
+      kind: parsed.data.kind ?? suggestion?.kind ?? "task",
       title: suggestion?.title ?? text,
     };
   }

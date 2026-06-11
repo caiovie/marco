@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-end-marco.mjs",
+            "timeout": 15,
+            "statusMessage": "Registrando sessão no Marco"
+          }
+        ]
+      }
+    ]
+  }
+}
