@@ -1,0 +1,47 @@
+{
+  "name": "marco-claude-ai-capture-v1",
+  "description": "Recebe registros do Claude.ai (via marco-mcp-server-v1), valida x-marco-hook-token, assina HMAC e envia ao /api/ingest com kind/project_slug opcionais. SECRETS SANITIZADOS — substituir <CC_HOOK_TOKEN> e <N8N_WEBHOOK_SECRET>.",
+  "nodes": [
+    {
+      "name": "Claude AI Capture",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "parameters": { "httpMethod": "POST", "path": "marco-claude-ai", "responseMode": "lastNode" }
+    },
+    {
+      "name": "Validate and Sign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const HOOK_TOKEN = '<CC_HOOK_TOKEN>';\nconst HMAC_SECRET = '<N8N_WEBHOOK_SECRET>';\nconst item = $input.first().json;\nif (((item.headers||{})['x-marco-hook-token']||'') !== HOOK_TOKEN) return [];\nconst body = item.body || {};\nconst text = body.text;\nif (!text || typeof text !== 'string') return [];\nconst data = { source: 'claude-ai', text: text.slice(0, 4000) };\nif (['task','milestone','note'].includes(body.kind)) data.kind = body.kind;\nif (typeof body.project_slug === 'string' && body.project_slug) data.project_slug = body.project_slug.slice(0, 60);\nconst payload = JSON.stringify(data);\nconst c = require('crypto');\nconst signature = c.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');\nreturn [{ json: { payload, signature } }];"
+      }
+    },
+    {
+      "name": "Send to Marco Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [840, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://marco-caio-s-projects26.vercel.app/api/ingest",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": { "parameters": [{ "name": "x-marco-signature", "value": "={{ $json.signature }}" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.payload }}",
+        "options": { "timeout": 25000 }
+      }
+    }
+  ],
+  "connections": {
+    "Claude AI Capture": { "main": [[{ "node": "Validate and Sign", "type": "main", "index": 0 }]] },
+    "Validate and Sign": { "main": [[{ "node": "Send to Marco Ingest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

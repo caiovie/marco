@@ -1,0 +1,47 @@
+{
+  "name": "marco-claude-code-capture-v1",
+  "description": "Recebe resumo de sessões do Claude Code (hook SessionEnd), valida x-marco-hook-token, assina HMAC e envia ao /api/ingest. SECRETS SANITIZADOS — substituir <CC_HOOK_TOKEN> e <N8N_WEBHOOK_SECRET> pelos valores do .env.",
+  "nodes": [
+    {
+      "name": "Claude Code Session",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "parameters": { "httpMethod": "POST", "path": "marco-claude-code", "responseMode": "onReceived" }
+    },
+    {
+      "name": "Validate and Sign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const HOOK_TOKEN = '<CC_HOOK_TOKEN>';\nconst HMAC_SECRET = '<N8N_WEBHOOK_SECRET>';\nconst item = $input.first().json;\nif (((item.headers||{})['x-marco-hook-token']||'') !== HOOK_TOKEN) return [];\nconst text = item.body && item.body.text;\nif (!text || typeof text !== 'string') return [];\nconst payload = JSON.stringify({ source: 'claude-code', text: text.slice(0, 4000) });\nconst c = require('crypto');\nconst signature = c.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');\nreturn [{ json: { payload, signature } }];"
+      }
+    },
+    {
+      "name": "Send to Marco Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [840, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://marco-caio-s-projects26.vercel.app/api/ingest",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": { "parameters": [{ "name": "x-marco-signature", "value": "={{ $json.signature }}" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.payload }}",
+        "options": { "timeout": 25000 }
+      }
+    }
+  ],
+  "connections": {
+    "Claude Code Session": { "main": [[{ "node": "Validate and Sign", "type": "main", "index": 0 }]] },
+    "Validate and Sign": { "main": [[{ "node": "Send to Marco Ingest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

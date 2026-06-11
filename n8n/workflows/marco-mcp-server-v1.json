@@ -1,0 +1,64 @@
+{
+  "name": "marco-mcp-server-v1",
+  "description": "MCP server para Claude.ai com tools registrar_atividade e criar_task; encaminha para o webhook marco-claude-ai. SECRETS SANITIZADOS — substituir <CC_HOOK_TOKEN> e o <MCP_PATH> (usar sufixo aleatório).",
+  "nodes": [
+    {
+      "name": "Marco MCP Server",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 1.1,
+      "position": [500, 300],
+      "parameters": { "path": "<MCP_PATH>", "authentication": "none" }
+    },
+    {
+      "name": "registrar_atividade",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [500, 500],
+      "parameters": {
+        "toolDescription": "Registra uma atividade ja realizada (marco). Projetos: ae, kairos, esca7, busca-clt.",
+        "method": "POST",
+        "url": "https://workflowsmatriz.cassinweb.shop/webhook/marco-claude-ai",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": { "parameters": [{ "name": "x-marco-hook-token", "value": "<CC_HOOK_TOKEN>" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": { "parameters": [
+          { "name": "text", "value": "={{ $fromAI('texto', 'Descricao da atividade realizada, em pt-BR') }}" },
+          { "name": "kind", "value": "milestone" },
+          { "name": "project_slug", "value": "={{ $fromAI('projeto', 'Slug do projeto ou vazio') }}" }
+        ] },
+        "options": { "timeout": 25000 }
+      }
+    },
+    {
+      "name": "criar_task",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [740, 500],
+      "parameters": {
+        "toolDescription": "Cria uma tarefa (a fazer). Projetos: ae, kairos, esca7, busca-clt.",
+        "method": "POST",
+        "url": "https://workflowsmatriz.cassinweb.shop/webhook/marco-claude-ai",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": { "parameters": [{ "name": "x-marco-hook-token", "value": "<CC_HOOK_TOKEN>" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": { "parameters": [
+          { "name": "text", "value": "={{ $fromAI('texto', 'Descricao da tarefa a fazer, em pt-BR') }}" },
+          { "name": "kind", "value": "task" },
+          { "name": "project_slug", "value": "={{ $fromAI('projeto', 'Slug do projeto ou vazio') }}" }
+        ] },
+        "options": { "timeout": 25000 }
+      }
+    }
+  ],
+  "connections": {
+    "registrar_atividade": { "ai_tool": [[{ "node": "Marco MCP Server", "type": "ai_tool", "index": 0 }]] },
+    "criar_task": { "ai_tool": [[{ "node": "Marco MCP Server", "type": "ai_tool", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
