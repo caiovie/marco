@@ -1,0 +1,59 @@
+{
+  "name": "marco-telegram-capture-v1",
+  "description": "Captura mensagens do bot do Telegram via webhook, valida secret_token, assina com HMAC e envia ao /api/ingest do Marco para classificação e registro no inbox. SECRETS SANITIZADOS — substituir <TELEGRAM_WEBHOOK_SECRET_TOKEN> e <N8N_WEBHOOK_SECRET> pelos valores do .env ao importar.",
+  "nodes": [
+    {
+      "id": "004ee214-6bd7-449f-b6a8-e52aabd69c59",
+      "name": "Telegram Update",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marco-telegram",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "37540621-9933-4b95-ac3f-834fe1ff1948",
+      "name": "Validate and Sign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const SECRET_TOKEN = '<TELEGRAM_WEBHOOK_SECRET_TOKEN>';\nconst HMAC_SECRET = '<N8N_WEBHOOK_SECRET>';\n\nconst item = $input.first().json;\nconst headers = item.headers || {};\nif ((headers['x-telegram-bot-api-secret-token'] || '') !== SECRET_TOKEN) {\n  return [];\n}\nconst text = item.body && item.body.message && item.body.message.text;\nif (!text || typeof text !== 'string') {\n  return [];\n}\nconst payload = JSON.stringify({ source: 'telegram', text: text.slice(0, 4000) });\n\nlet signature;\ntry {\n  const c = require('crypto');\n  signature = c.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');\n} catch (e) {\n  const enc = new TextEncoder();\n  const key = await crypto.subtle.importKey('raw', enc.encode(HMAC_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);\n  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(payload));\n  signature = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');\n}\nreturn [{ json: { payload, signature } }];"
+      }
+    },
+    {
+      "id": "54cda4b1-da8c-4176-9d05-0779111c6fdd",
+      "name": "Send to Marco Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [840, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://marco-caio-s-projects26.vercel.app/api/ingest",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-marco-signature", "value": "={{ $json.signature }}" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.payload }}",
+        "options": { "timeout": 25000 }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Update": { "main": [[{ "node": "Validate and Sign", "type": "main", "index": 0 }]] },
+    "Validate and Sign": { "main": [[{ "node": "Send to Marco Ingest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
