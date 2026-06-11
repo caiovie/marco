@@ -6,7 +6,11 @@ Estética editorial minimalista (preto e branco + cor semântica), inspirada em 
 
 ## Status
 
-🚧 **Fase de base** — fundação do projeto montada, aguardando definição de escopo (`GOAL.MD`).
+✅ **MVP no ar** — ciclo completo Inbox → Tarefa/Marco → Feed funcionando.
+
+- Produção: https://marco-caio-s-projects26.vercel.app
+  (desativar *Vercel Authentication* em Settings → Deployment Protection para acesso público)
+- Local: `npm run dev` → http://localhost:3000
 
 ## Stack
 
@@ -38,5 +42,5 @@ marco.ai/
 
 ## Setup
 
-1. Copiar `.env.example` para `.env` e preencher as chaves (Supabase, Anthropic).
-2. Scaffold do Next.js será criado após a definição do GOAL.
+1. Copiar `.env.example` para `.env.local` e preencher as chaves (Supabase obrigatório; `ANTHROPIC_API_KEY` opcional — sem ela a classificação do inbox é manual).
+2. `npm install && npm run dev`.
