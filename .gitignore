@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# Env — nunca versionar secrets
+.env
+.env*.local
+
+# Vercel
+.vercel
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Logs e debug
+npm-debug.log*
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.tsbuildinfo
+next-env.d.ts
